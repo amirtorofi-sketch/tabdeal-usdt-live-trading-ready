@@ -33,6 +33,48 @@ from tabdeal.enums import OrderSides, OrderTypes
 # نگاشت رشته‌ی ساده به Enum رسمی پکیج (دقیقاً طبق نمونه‌ی README رسمی tabdeal-python)
 _SIDE_MAP = {"BUY": OrderSides.BUY, "SELL": OrderSides.SELL}
 
+def fmt_price(value) -> str:
+    """
+    فرمت هوشمند قیمت کوین برای نمایش در لاگ/تلگرام.
+    برخلاف نسخه‌ی تومانی (که قیمت‌ها همیشه اعداد بزرگ بودن و گرد کردن به عدد
+    صحیح مشکلی نداشت)، اینجا قیمت‌های دلاری خیلی از کوین‌ها زیر ۱ دلار یا حتی
+    زیر ۰.۰۰۰۱ دلاره؛ گرد کردن به عدد صحیح باعث می‌شد ورود/SL/TP همیشه صفر
+    چاپ بشه. این تابع بر اساس بزرگی عدد، تعداد رقم اعشار مناسب رو انتخاب
+    می‌کنه تا دقت قیمت از دست نره.
+    """
+    try:
+        v = float(value)
+    except (TypeError, ValueError):
+        return str(value)
+    if v == 0:
+        return "0"
+    av = abs(v)
+    if av >= 1000:
+        s = f"{v:,.0f}"
+    elif av >= 1:
+        s = f"{v:,.4f}"
+        if "." in s:
+            s = s.rstrip("0").rstrip(".")
+    else:
+        decimals = max(2, 3 - int(math.floor(math.log10(av))))
+        s = f"{v:.{decimals}f}"
+        if "." in s:
+            s = s.rstrip("0").rstrip(".")
+    return s
+
+
+def fmt_usdt(value) -> str:
+    """فرمت مبالغ تتری (مارجین/موجودی/سود‌وزیان) با دو رقم اعشار ثابت — برخلاف
+    قیمت کوین، مقیاس این‌ها معمولاً نزدیک هم و در حد چند تا چند صد تتره، پس
+    گرد کردن پویا لازم نیست، ولی گرد کردن به عدد صحیح سود/زیان‌های کوچیک
+    (مثلاً ۰.۳ تتر) رو هم صفر نشون می‌ده، پس دو رقم اعشار ثابت نگه می‌داریم."""
+    try:
+        v = float(value)
+    except (TypeError, ValueError):
+        return str(value)
+    return f"{v:,.2f}"
+
+
 def _float_env(name: str, default: str) -> float:
     """
     مثل os.environ.get ولی رشته‌ی خالی رو هم «تنظیم‌نشده» در نظر می‌گیره.
