@@ -73,6 +73,62 @@ STATE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "state.jso
 # این یکی مخصوص داده‌ی عمومی بازاره و روی سرورهای GitHub Actions (که در آمریکا هستن)
 # با خطای 451 (محدودیت جغرافیایی بایننس) مواجه نمی‌شه.
 BINANCE_KLINES_URL = "https://data-api.binance.vision/api/v3/klines"
+BINANCE_TICKER_PRICE_URL = "https://data-api.binance.vision/api/v3/ticker/price"
+
+# نگاشت دستی برای نمادهایی که اسمشون روی بایننس با تبدیل فرق داره (نه اینکه
+# اصلاً روی بایننس نباشن). فقط اونایی که واقعاً تایید شدن اینجا اضافه می‌شن؛
+# بقیه‌ی نمادهایی که اصلاً روی بایننس پیدا نمی‌شن با get_binance_usdt_symbols
+# به‌صورت خودکار (و صحیح) فیلتر می‌شن، بدون نیاز به نگه‌داشتن دستیِ یه لیست
+# طولانی که خودش به‌مرور قدیمی می‌شه.
+BINANCE_SYMBOL_OVERRIDES = {
+    "SATSUSDT": "1000SATSUSDT",  # بایننس این کوین رو با پیشوند 1000 لیست کرده
+}
+
+_binance_symbols_cache = None
+_binance_symbols_fetch_failed = False
+
+
+def get_binance_usdt_symbols():
+    """
+    کل لیست نمادهای معتبر بایننس رو یک‌بار (در طول کل اجرا) می‌گیره و کش
+    می‌کنه. هدف: قبل از تلاش برای گرفتن کندل هر نماد، بفهمیم اصلاً روی بایننس
+    وجود داره یا نه - تا برای کوین‌هایی که فقط روی تبدیل هستن (و بایننس هیچ
+    داده‌ای ازشون نداره) نه وقت با درخواست بی‌نتیجه تلف بشه، نه کلی پیام خطای
+    یکسان توی لاگ/تلگرام تکرار بشه.
+    اگه خود این درخواست هم شکست بخوره (مثلاً مشکل شبکه‌ی موقت)، None برمی‌گردونه
+    تا کد بالادستی فیلتر رو نادیده بگیره و مثل قبل (تک‌تک تست کردن) رفتار کنه -
+    یعنی بدترین حالت فقط برمی‌گردیم به وضعیت قبلی، نه کرش.
+    """
+    global _binance_symbols_cache, _binance_symbols_fetch_failed
+    if _binance_symbols_cache is not None:
+        return _binance_symbols_cache
+    if _binance_symbols_fetch_failed:
+        return None
+    try:
+        resp = requests.get(BINANCE_TICKER_PRICE_URL, timeout=20)
+        resp.raise_for_status()
+        rows = resp.json()
+        _binance_symbols_cache = {row["symbol"] for row in rows}
+    except Exception as e:
+        print(f"⚠️ نگرفتن لیست کامل نمادهای بایننس (فیلتر پیش‌کشف غیرفعال می‌مونه، مثل قبل تک‌تک تست می‌کنیم): {e}")
+        _binance_symbols_fetch_failed = True
+        return None
+    return _binance_symbols_cache
+
+
+def resolve_binance_symbol(naive_symbol: str):
+    """
+    نماد ساده (مثلاً 'SATSUSDT') رو به نماد واقعی بایننس نگاشت می‌کنه (اگه توی
+    BINANCE_SYMBOL_OVERRIDES بود)، و اگه نماد نهایی اصلاً روی بایننس پیدا نشه
+    None برمی‌گردونه (یعنی: این کوین رو رد کن، بایننس ازش داده نداره).
+    اگه لیست نمادهای بایننس در دسترس نبود (خطای شبکه)، بدون فیلتر همون نماد
+    رو برمی‌گردونه تا رفتار قبلی (تلاش برای همه) حفظ بشه.
+    """
+    real_symbol = BINANCE_SYMBOL_OVERRIDES.get(naive_symbol, naive_symbol)
+    known = get_binance_usdt_symbols()
+    if known is None:
+        return real_symbol
+    return real_symbol if real_symbol in known else None
 
 
 # =====================================================================
