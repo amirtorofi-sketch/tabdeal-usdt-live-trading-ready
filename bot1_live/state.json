@@ -1,5 +1,5 @@
 {
-  "_trade_counter": 7,
+  "_trade_counter": 14,
   "_paper_balance_usdt": 1000.0,
   "CFXUSDT__smc": {
     "direction": "long",
@@ -13,7 +13,7 @@
     "trade_id": 1,
     "margin_usdt": 10.0,
     "notional_usdt": 10.0,
-    "last_checked_ms": 1789902149612,
+    "last_checked_ms": 1789903019735,
     "lot_a": {
       "qty": 102.22,
       "status": "open"
@@ -36,7 +36,7 @@
     "trade_id": 2,
     "margin_usdt": 10.0,
     "notional_usdt": 10.0,
-    "last_checked_ms": 1789902181194,
+    "last_checked_ms": 1789903048897,
     "lot_a": {
       "qty": 1.375,
       "status": "open"
@@ -61,7 +61,7 @@
     "trade_id": 3,
     "margin_usdt": 10.0,
     "notional_usdt": 10.0,
-    "last_checked_ms": 1789902285666,
+    "last_checked_ms": 1789903145006,
     "lot_a": {
       "qty": 47.8,
       "status": "open"
@@ -84,7 +84,7 @@
     "trade_id": 4,
     "margin_usdt": 10.0,
     "notional_usdt": 10.0,
-    "last_checked_ms": 1789902365018,
+    "last_checked_ms": 1789903227945,
     "lot_a": {
       "qty": 171.5,
       "status": "open"
@@ -107,7 +107,7 @@
     "trade_id": 5,
     "margin_usdt": 10.0,
     "notional_usdt": 10.0,
-    "last_checked_ms": 1789902371616,
+    "last_checked_ms": 1789903234006,
     "lot_a": {
       "qty": 105.8,
       "status": "open"
@@ -130,7 +130,7 @@
     "trade_id": 6,
     "margin_usdt": 10.0,
     "notional_usdt": 30.0,
-    "last_checked_ms": 1789902393827,
+    "last_checked_ms": 1789903254542,
     "lot_a": {
       "qty": 879.2,
       "status": "open"
@@ -153,7 +153,7 @@
     "trade_id": 7,
     "margin_usdt": 10.0,
     "notional_usdt": 10.0,
-    "last_checked_ms": 1789902396081,
+    "last_checked_ms": 1789903255464,
     "lot_a": {
       "qty": 293.0,
       "status": "open"
@@ -163,5 +163,166 @@
       "status": "open"
     }
   },
-  "SUNUSDT__smc__last_candle": "2026-09-20 10:45:00"
+  "SUNUSDT__smc__last_candle": "2026-09-20 10:45:00",
+  "CELOUSDT__smc": {
+    "direction": "short",
+    "entry": 0.08725,
+    "sl": 0.08859069798570787,
+    "tp1": 0.08523895302143816,
+    "tp2": 0.08322790604287632,
+    "source_label": "ICT/SMC Scalp Pro",
+    "opened_at": "2026-09-20 11:00:00",
+    "margin_symbol": "CELO_USDT",
+    "trade_id": 8,
+    "margin_usdt": 10.0,
+    "notional_usdt": 10.0,
+    "last_checked_ms": 1789903013106,
+    "lot_a": {
+      "qty": 57.3,
+      "status": "open"
+    },
+    "lot_b": {
+      "qty": 57.31,
+      "status": "open"
+    }
+  },
+  "CELOUSDT__smc__last_candle": "2026-09-20 11:00:00",
+  "INITUSDT__smc": {
+    "direction": "long",
+    "entry": 0.07139999999999999,
+    "sl": 0.07070930347277993,
+    "tp1": 0.0724360447908301,
+    "tp2": 0.0734720895816602,
+    "source_label": "ICT/SMC Scalp Pro",
+    "opened_at": "2026-09-20 11:00:00",
+    "margin_symbol": "INIT_USDT",
+    "trade_id": 9,
+    "margin_usdt": 10.0,
+    "notional_usdt": 10.0,
+    "last_checked_ms": 1789903100782,
+    "lot_a": {
+      "qty": 70.028,
+      "status": "open"
+    },
+    "lot_b": {
+      "qty": 70.028,
+      "status": "open"
+    }
+  },
+  "INITUSDT__smc__last_candle": "2026-09-20 11:00:00",
+  "PAXGUSDT__st": {
+    "direction": "long",
+    "entry": 4363.950000000001,
+    "sl": 4360.862836430309,
+    "tp1": 4368.5807453545385,
+    "tp2": 4373.211490709077,
+    "source_label": "Supertrend+ADX",
+    "opened_at": "2026-09-20 11:00:00",
+    "margin_symbol": "PAXG_USDT",
+    "trade_id": 10,
+    "margin_usdt": 10.0,
+    "notional_usdt": 30.0,
+    "last_checked_ms": 1789903172575,
+    "lot_a": {
+      "qty": 0.003437,
+      "status": "open"
+    },
+    "lot_b": {
+      "qty": 0.003437,
+      "status": "open"
+    }
+  },
+  "PAXGUSDT__st__last_candle": "2026-09-20 11:00:00",
+  "PAXGUSDT__smc": {
+    "direction": "long",
+    "entry": 4363.950000000001,
+    "sl": 4362.551898213012,
+    "tp1": 4366.047152680486,
+    "tp2": 4368.144305360969,
+    "source_label": "ICT/SMC Scalp Pro",
+    "opened_at": "2026-09-20 11:00:00",
+    "margin_symbol": "PAXG_USDT",
+    "trade_id": 11,
+    "margin_usdt": 10.0,
+    "notional_usdt": 10.0,
+    "last_checked_ms": 1789903176117,
+    "lot_a": {
+      "qty": 0.001145,
+      "status": "open"
+    },
+    "lot_b": {
+      "qty": 0.001146,
+      "status": "open"
+    }
+  },
+  "PAXGUSDT__smc__last_candle": "2026-09-20 11:00:00",
+  "RUNEUSDT__smc": {
+    "direction": "short",
+    "entry": 0.53835,
+    "sl": 0.5420973233764504,
+    "tp1": 0.5327290149353244,
+    "tp2": 0.5271080298706489,
+    "source_label": "ICT/SMC Scalp Pro",
+    "opened_at": "2026-09-20 11:00:00",
+    "margin_symbol": "RUNE_USDT",
+    "trade_id": 12,
+    "margin_usdt": 10.0,
+    "notional_usdt": 10.0,
+    "last_checked_ms": 1789903220752,
+    "lot_a": {
+      "qty": 9.2,
+      "status": "open"
+    },
+    "lot_b": {
+      "qty": 9.3,
+      "status": "open"
+    }
+  },
+  "RUNEUSDT__smc__last_candle": "2026-09-20 11:00:00",
+  "SUSDT__smc": {
+    "direction": "short",
+    "entry": 0.03605,
+    "sl": 0.03738778101396328,
+    "tp1": 0.034043328479055085,
+    "tp2": 0.03203665695811018,
+    "source_label": "ICT/SMC Scalp Pro",
+    "opened_at": "2026-09-20 11:00:00",
+    "margin_symbol": "S_USDT",
+    "trade_id": 13,
+    "margin_usdt": 10.0,
+    "notional_usdt": 10.0,
+    "last_checked_ms": 1789903225891,
+    "lot_a": {
+      "qty": 138.6,
+      "status": "open"
+    },
+    "lot_b": {
+      "qty": 138.7,
+      "status": "open"
+    }
+  },
+  "SUSDT__smc__last_candle": "2026-09-20 11:00:00",
+  "STGUSDT__smc": {
+    "direction": "long",
+    "entry": 0.1278,
+    "sl": 0.123451880890102,
+    "tp1": 0.134322178664847,
+    "tp2": 0.140844357329694,
+    "source_label": "ICT/SMC Scalp Pro",
+    "opened_at": "2026-09-20 11:00:00",
+    "margin_symbol": "STG_USDT",
+    "trade_id": 14,
+    "margin_usdt": 10.0,
+    "notional_usdt": 10.0,
+    "last_checked_ms": 1789903246311,
+    "lot_a": {
+      "qty": 39.1236,
+      "status": "open"
+    },
+    "lot_b": {
+      "qty": 39.1236,
+      "status": "open"
+    }
+  },
+  "STGUSDT__smc__last_candle": "2026-09-20 11:00:00"
 }
