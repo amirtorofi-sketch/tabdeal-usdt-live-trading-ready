@@ -40,12 +40,13 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from signal_bot import (  # noqa: E402  (وارد کردن بدون تغییر از استراتژی اصلی)
     get_klines, check_strategy_supertrend, check_strategy_smc, get_htf_bias,
     TIMEFRAME, KLINES_LIMIT, ST_TP1_RR, ST_TP2_RR, SL_ATR_MULT, TP1_RR, TP2_RR,
+    resolve_binance_symbol,
 )
 from common.tabdeal_broker import (  # noqa: E402
     open_margin_position, close_margin_position, get_public_client, get_mid_price,
     discover_all_usdt_margin_bases, discover_usdt_margin_symbols, extract_real_price,
     get_market_info, split_into_two_lots, currency_label, BrokerError, DRY_RUN, _float_env,
-    get_price_range_since, now_ms, HARD_CAP_MARGIN_USDT,
+    get_price_range_since, now_ms, HARD_CAP_MARGIN_USDT, fmt_price, fmt_usdt,
 )
 
 # اگه پوزیشنی از نسخه‌ی قبلی (بدون last_checked_ms) باقی مونده باشه، برای
@@ -190,8 +191,8 @@ def _close_lot(state, spot_symbol, pos, lot_key, price, reason, source_label):
         pnl_sign = "+" if pnl >= 0 else ""
         notify(
             f"⚪ [آزمایشی] معامله #{pos.get('trade_id','؟')} — بسته شدن {lot_key} | {spot_symbol} ({source_label}, {pos['direction']}) — دلیل: {reason}\n"
-            f"قیمت خروج≈{price:,.0f} {cur} | تغییر قیمت: {pct_sign}{price_pct:.2f}٪\n"
-            f"سود/زیان این لات: {pnl_sign}{pnl:,.0f} {cur} | موجودی فعلی: {new_balance:,.0f} {cur}"
+            f"قیمت خروج≈{fmt_price(price)} {cur} | تغییر قیمت: {pct_sign}{price_pct:.2f}٪\n"
+            f"سود/زیان این لات: {pnl_sign}{fmt_usdt(pnl)} {cur} | موجودی فعلی: {fmt_usdt(new_balance)} {cur}"
         )
     else:
         try:
@@ -201,7 +202,7 @@ def _close_lot(state, spot_symbol, pos, lot_key, price, reason, source_label):
             return False
         notify(
             f"⚪ معامله #{pos.get('trade_id','؟')} — بسته شدن {lot_key} واقعی | {spot_symbol} ({source_label}, {pos['direction']}) — دلیل: {reason}\n"
-            f"قیمت خروج≈{price:,.0f} {cur} | تغییر قیمت: {pct_sign}{price_pct:.2f}٪ (سود/زیان دقیق تتری رو از پنل تبدیل چک کن)"
+            f"قیمت خروج≈{fmt_price(price)} {cur} | تغییر قیمت: {pct_sign}{price_pct:.2f}٪ (سود/زیان دقیق تتری رو از پنل تبدیل چک کن)"
         )
 
     lot["status"] = "closed"
@@ -247,7 +248,7 @@ def manage_open_position(state: dict, position_key: str, spot_symbol: str):
             ok = _close_lot(state, spot_symbol, pos, "lot_a", exit_price, reason, source_label)
             if ok and reason == "TP1" and pos["lot_b"]["status"] == "open":
                 pos["sl"] = pos["entry"]
-                notify(f"🔵 معامله #{pos.get('trade_id','؟')} — SL لات باقی‌مانده‌ی {spot_symbol} ({source_label}) به نقطه‌ی ورود (Breakeven={pos['entry']:,.0f}) منتقل شد.")
+                notify(f"🔵 معامله #{pos.get('trade_id','؟')} — SL لات باقی‌مانده‌ی {spot_symbol} ({source_label}) به نقطه‌ی ورود (Breakeven={fmt_price(pos['entry'])}) منتقل شد.")
 
     lot_b = pos["lot_b"]
     if lot_b["status"] == "open":
@@ -268,8 +269,8 @@ def manage_open_position(state: dict, position_key: str, spot_symbol: str):
             sign = "+" if total_pnl >= 0 else ""
             notify(
                 f"🏁 معامله #{pos.get('trade_id','؟')} کاملاً بسته شد | {spot_symbol} ({source_label})\n"
-                f"مجموع سود/زیان این معامله: {sign}{total_pnl:,.0f} {cur}{roi_txt}\n"
-                f"موجودی نهایی بعد از این معامله: {balance:,.0f} {cur}"
+                f"مجموع سود/زیان این معامله: {sign}{fmt_usdt(total_pnl)} {cur}{roi_txt}\n"
+                f"موجودی نهایی بعد از این معامله: {fmt_usdt(balance)} {cur}"
             )
         else:
             notify(f"🏁 معامله #{pos.get('trade_id','؟')} کاملاً بسته شد | {spot_symbol} ({source_label}) — سود/زیان و موجودی دقیق رو از پنل تبدیل چک کن.")
@@ -303,8 +304,8 @@ def try_open_position(state, spot_client, spot_symbol, margin_symbol, position_k
         cur = currency_label(spot_symbol)
         notify(
             f"⛔ سیگنال {direction} روی {spot_symbol} ({source_label}) رد شد: سرمایه‌ی آزاد کافی نیست.\n"
-            f"مارجین موردنیاز: {margin_needed:,.0f} {cur} | مارجین آزاد: {free_margin:,.0f} {cur}\n"
-            f"(موجودی نقدی: {balance:,.0f} {cur} | مارجین درگیر: {used_margin:,.0f} {cur})"
+            f"مارجین موردنیاز: {fmt_usdt(margin_needed)} {cur} | مارجین آزاد: {fmt_usdt(free_margin)} {cur}\n"
+            f"(موجودی نقدی: {fmt_usdt(balance)} {cur} | مارجین درگیر: {fmt_usdt(used_margin)} {cur})"
         )
         state[signal_key] = str(candle_time)
         save_state(state)
@@ -372,16 +373,16 @@ def try_open_position(state, spot_client, spot_symbol, margin_symbol, position_k
             f"نماد: {spot_symbol}\n"
             f"زمان کندل: {candle_str}\n"
             f"حجم: {qty}\n"
-            f"ارزش معامله: {notional_usdt:,.0f} {cur} (لوریج {leverage:g}x)\n"
-            f"مارجین این معامله: {cfg['margin_usdt']:,.0f} {cur}\n"
-            f"ورود: {real_price:,.0f}\n"
-            f"SL: {sl:,.0f}\n"
-            f"TP1: {tp1:,.0f}\n"
-            f"TP2: {tp2:,.0f}\n"
+            f"ارزش معامله: {fmt_usdt(notional_usdt)} {cur} (لوریج {leverage:g}x)\n"
+            f"مارجین این معامله: {fmt_usdt(cfg['margin_usdt'])} {cur}\n"
+            f"ورود: {fmt_price(real_price)}\n"
+            f"SL: {fmt_price(sl)}\n"
+            f"TP1: {fmt_price(tp1)}\n"
+            f"TP2: {fmt_price(tp2)}\n"
             f"—\n"
-            f"موجودی نقدی: {balance_before:,.0f} {cur}\n"
-            f"مارجین درگیر در پوزیشن‌های باز: {total_margin:,.0f} {cur}\n"
-            f"ارزش کل پوزیشن‌های باز (اسمی): {total_notional:,.0f} {cur}"
+            f"موجودی نقدی: {fmt_usdt(balance_before)} {cur}\n"
+            f"مارجین درگیر در پوزیشن‌های باز: {fmt_usdt(total_margin)} {cur}\n"
+            f"ارزش کل پوزیشن‌های باز (اسمی): {fmt_usdt(total_notional)} {cur}"
         )
     else:
         notify(
@@ -390,15 +391,15 @@ def try_open_position(state, spot_client, spot_symbol, margin_symbol, position_k
             f"نماد: {spot_symbol}\n"
             f"زمان کندل: {candle_str}\n"
             f"حجم: {qty}\n"
-            f"ارزش معامله: {notional_usdt:,.0f} {cur} (لوریج {leverage:g}x)\n"
-            f"مارجین این معامله: {cfg['margin_usdt']:,.0f} {cur}\n"
-            f"ورود: {real_price:,.0f}\n"
-            f"SL: {sl:,.0f}\n"
-            f"TP1: {tp1:,.0f}\n"
-            f"TP2: {tp2:,.0f}\n"
+            f"ارزش معامله: {fmt_usdt(notional_usdt)} {cur} (لوریج {leverage:g}x)\n"
+            f"مارجین این معامله: {fmt_usdt(cfg['margin_usdt'])} {cur}\n"
+            f"ورود: {fmt_price(real_price)}\n"
+            f"SL: {fmt_price(sl)}\n"
+            f"TP1: {fmt_price(tp1)}\n"
+            f"TP2: {fmt_price(tp2)}\n"
             f"—\n"
-            f"مارجین درگیر در پوزیشن‌های باز: {total_margin:,.0f} {cur}\n"
-            f"ارزش کل پوزیشن‌های باز (اسمی): {total_notional:,.0f} {cur}"
+            f"مارجین درگیر در پوزیشن‌های باز: {fmt_usdt(total_margin)} {cur}\n"
+            f"ارزش کل پوزیشن‌های باز (اسمی): {fmt_usdt(total_notional)} {cur}"
         )
 
     save_state(state)
@@ -413,11 +414,27 @@ def main():
     if not active:
         notify("⚠️ در حال حاضر هیچ ارزی روی تبدیل بازار تتری مارجین‌دار ندارد.")
         return
-    binance_to_symbols = {f"{base}USDT": syms for base, syms in active.items()}
+    naive_binance_to_symbols = {f"{base}USDT": syms for base, syms in active.items()}
+
+    # --- فیلتر پیش‌کشف: نمادهایی که اصلاً روی بایننس داده‌ی تاریخی ندارن رو
+    # همین‌جا (یک‌بار، قبل از لوپ) کنار می‌ذاریم، نه اینکه برای هر کدوم توی
+    # لوپ یه خطای تکراری بگیریم و به تلگرام هم بفرستیم. اونایی که فقط اسمشون
+    # با بایننس فرق داره (طبق BINANCE_SYMBOL_OVERRIDES در signal_bot.py) با
+    # اسم درست جایگزین می‌شن. ---
+    binance_to_symbols = {}
+    skipped_no_binance = []
+    for naive_symbol, syms in naive_binance_to_symbols.items():
+        real_binance_symbol = resolve_binance_symbol(naive_symbol)
+        if real_binance_symbol is None:
+            skipped_no_binance.append(syms["spot"])
+        else:
+            binance_to_symbols[real_binance_symbol] = syms
 
     mode_label = "آزمایشی (Paper — بدون پول واقعی)" if DRY_RUN else "زنده (پول واقعی)"
     print(f"حالت اجرا: {mode_label} | تعداد نمادهای تتری مارجین‌دار: {len(binance_to_symbols)}")
     print(f"نمادهای فعال: {[s['spot'] for s in binance_to_symbols.values()]}")
+    if skipped_no_binance:
+        print(f"ℹ️ {len(skipped_no_binance)} نماد روی بایننس داده‌ی تاریخی ندارن، از این اجرا رد شدن: {skipped_no_binance}")
 
     for binance_symbol, syms in binance_to_symbols.items():
         spot_symbol = syms["spot"]
@@ -438,7 +455,10 @@ def main():
         try:
             df = get_klines(binance_symbol, TIMEFRAME, KLINES_LIMIT)
         except Exception as e:
-            notify(f"❌ خطا در گرفتن داده‌ی {binance_symbol}: {e}")
+            # فقط توی لاگ اجرا چاپ می‌شه، نه تلگرام - چون با فیلتر پیش‌کشف
+            # بالا، این حالت دیگه باید خیلی نادر باشه (مثلاً یه قطعی موقت
+            # شبکه)، نه چیزی که هر اجرا تکرار بشه و ارزش پیام تلگرام داشته باشه.
+            print(f"❌ خطا در گرفتن داده‌ی {binance_symbol}: {e}")
             time.sleep(0.5)
             continue
 
