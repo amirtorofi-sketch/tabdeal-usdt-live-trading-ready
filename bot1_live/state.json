@@ -1,4 +1,167 @@
 {
-  "_trade_counter": 0,
-  "_paper_balance_usdt": 1000.0
+  "_trade_counter": 7,
+  "_paper_balance_usdt": 1000.0,
+  "CFXUSDT__smc": {
+    "direction": "long",
+    "entry": 0.048910499999999996,
+    "sl": 0.04831184919759227,
+    "tp1": 0.049808476203611576,
+    "tp2": 0.05070645240722316,
+    "source_label": "ICT/SMC Scalp Pro",
+    "opened_at": "2026-09-20 10:45:00",
+    "margin_symbol": "CFX_USDT",
+    "trade_id": 1,
+    "margin_usdt": 10.0,
+    "notional_usdt": 10.0,
+    "last_checked_ms": 1789902149612,
+    "lot_a": {
+      "qty": 102.22,
+      "status": "open"
+    },
+    "lot_b": {
+      "qty": 102.22,
+      "status": "open"
+    }
+  },
+  "CFXUSDT__smc__last_candle": "2026-09-20 10:45:00",
+  "EGLDUSDT__smc": {
+    "direction": "long",
+    "entry": 3.635,
+    "sl": 3.5847927619435755,
+    "tp1": 3.710310857084636,
+    "tp2": 3.785621714169273,
+    "source_label": "ICT/SMC Scalp Pro",
+    "opened_at": "2026-09-20 10:45:00",
+    "margin_symbol": "EGLD_USDT",
+    "trade_id": 2,
+    "margin_usdt": 10.0,
+    "notional_usdt": 10.0,
+    "last_checked_ms": 1789902181194,
+    "lot_a": {
+      "qty": 1.375,
+      "status": "open"
+    },
+    "lot_b": {
+      "qty": 1.376,
+      "status": "open"
+    }
+  },
+  "EGLDUSDT__smc__last_candle": "2026-09-20 10:45:00",
+  "HIFIUSDT__smc__last_candle": "2025-09-17 02:30:00",
+  "LEVERUSDT__smc__last_candle": "2025-07-04 02:30:00",
+  "MINAUSDT__smc": {
+    "direction": "long",
+    "entry": 0.104515,
+    "sl": 0.1024963905999389,
+    "tp1": 0.10754291410009165,
+    "tp2": 0.11057082820018331,
+    "source_label": "ICT/SMC Scalp Pro",
+    "opened_at": "2026-09-20 10:45:00",
+    "margin_symbol": "MINA_USDT",
+    "trade_id": 3,
+    "margin_usdt": 10.0,
+    "notional_usdt": 10.0,
+    "last_checked_ms": 1789902285666,
+    "lot_a": {
+      "qty": 47.8,
+      "status": "open"
+    },
+    "lot_b": {
+      "qty": 47.8,
+      "status": "open"
+    }
+  },
+  "MINAUSDT__smc__last_candle": "2026-09-20 10:45:00",
+  "SAGAUSDT__smc": {
+    "direction": "short",
+    "entry": 0.029150000000000002,
+    "sl": 0.03030511601313294,
+    "tp1": 0.027417325980300604,
+    "tp2": 0.0256846519606012,
+    "source_label": "ICT/SMC Scalp Pro",
+    "opened_at": "2026-09-20 10:45:00",
+    "margin_symbol": "SAGA_USDT",
+    "trade_id": 4,
+    "margin_usdt": 10.0,
+    "notional_usdt": 10.0,
+    "last_checked_ms": 1789902365018,
+    "lot_a": {
+      "qty": 171.5,
+      "status": "open"
+    },
+    "lot_b": {
+      "qty": 171.5,
+      "status": "open"
+    }
+  },
+  "SAGAUSDT__smc__last_candle": "2026-09-20 10:45:00",
+  "SEIUSDT__smc": {
+    "direction": "long",
+    "entry": 0.04725,
+    "sl": 0.04673507508570125,
+    "tp1": 0.04802238737144812,
+    "tp2": 0.048794774742896244,
+    "source_label": "ICT/SMC Scalp Pro",
+    "opened_at": "2026-09-20 10:45:00",
+    "margin_symbol": "SEI_USDT",
+    "trade_id": 5,
+    "margin_usdt": 10.0,
+    "notional_usdt": 10.0,
+    "last_checked_ms": 1789902371616,
+    "lot_a": {
+      "qty": 105.8,
+      "status": "open"
+    },
+    "lot_b": {
+      "qty": 105.8,
+      "status": "open"
+    }
+  },
+  "SEIUSDT__smc__last_candle": "2026-09-20 10:45:00",
+  "SUNUSDT__st": {
+    "direction": "short",
+    "entry": 0.01706015,
+    "sl": 0.017161375116213008,
+    "tp1": 0.016908312325680488,
+    "tp2": 0.016756474651360976,
+    "source_label": "Supertrend+ADX",
+    "opened_at": "2026-09-20 10:45:00",
+    "margin_symbol": "SUN_USDT",
+    "trade_id": 6,
+    "margin_usdt": 10.0,
+    "notional_usdt": 30.0,
+    "last_checked_ms": 1789902393827,
+    "lot_a": {
+      "qty": 879.2,
+      "status": "open"
+    },
+    "lot_b": {
+      "qty": 879.2,
+      "status": "open"
+    }
+  },
+  "SUNUSDT__st__last_candle": "2026-09-20 10:45:00",
+  "SUNUSDT__smc": {
+    "direction": "short",
+    "entry": 0.01706015,
+    "sl": 0.017109241178040746,
+    "tp1": 0.01698651323293888,
+    "tp2": 0.016912876465877764,
+    "source_label": "ICT/SMC Scalp Pro",
+    "opened_at": "2026-09-20 10:45:00",
+    "margin_symbol": "SUN_USDT",
+    "trade_id": 7,
+    "margin_usdt": 10.0,
+    "notional_usdt": 10.0,
+    "last_checked_ms": 1789902396081,
+    "lot_a": {
+      "qty": 293.0,
+      "status": "open"
+    },
+    "lot_b": {
+      "qty": 293.1,
+      "status": "open"
+    }
+  },
+  "SUNUSDT__smc__last_candle": "2026-09-20 10:45:00"
 }
