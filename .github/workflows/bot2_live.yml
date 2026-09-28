@@ -60,9 +60,18 @@ jobs:
           # اینکه کل نتیجه‌ی این اجرا (پوزیشن‌های باز/بسته‌شده‌ش) دور ریخته بشه،
           # چند بار دوباره تلاش می‌کنیم.
           for i in 1 2 3 4 5; do
-            if git pull --rebase origin main && git push; then
-              echo "✅ push موفق شد (تلاش $i)."
-              exit 0
+            if git pull --rebase origin main; then
+              # --- لایه‌ی دوم دفاعی در برابر تریگر دوگانه‌ی بیرونی (توضیح
+              # کامل توی common/reconcile_ledger.py و ورک‌فلوی بات۱) ---
+              python common/reconcile_ledger.py bot2_live
+              git add bot2_live/state.json bot2_live/paper_trades_log.csv
+              if ! git diff --staged --quiet; then
+                git commit -m "reconcile bot2 ledger [skip ci]"
+              fi
+              if git push; then
+                echo "✅ push موفق شد (تلاش $i)."
+                exit 0
+              fi
             fi
             echo "⚠️ تلاش $i برای pull/push ناموفق بود (احتمالاً تداخل با یه commit هم‌زمان)، بعد از کمی صبر دوباره امتحان می‌کنیم."
             git rebase --abort 2>/dev/null || true
@@ -70,4 +79,7 @@ jobs:
           done
           echo "⚠️ بعد از چند تلاش هم push معمولی جواب نداد. چون bot2_live/state.json و paper_trades_log.csv فقط دست خودِ این بات هستن (نه هیچ فایل دیگه‌ای)، نسخه‌ی همین اجرا رو با force-with-lease ثبت می‌کنیم تا نتیجه‌ی این اجرا گم نشه."
           git fetch origin main
+          python common/reconcile_ledger.py bot2_live
+          git add bot2_live/state.json bot2_live/paper_trades_log.csv
+          git diff --staged --quiet || git commit -m "reconcile bot2 ledger [skip ci]"
           git push --force-with-lease origin HEAD:main
