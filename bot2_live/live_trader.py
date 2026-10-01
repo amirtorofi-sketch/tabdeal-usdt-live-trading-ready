@@ -39,10 +39,11 @@ from common.tabdeal_broker import (  # noqa: E402
     open_margin_position, close_margin_position, get_public_client, get_mid_price,
     discover_all_usdt_margin_bases, discover_usdt_margin_symbols, extract_real_price,
     get_market_info, split_into_two_lots, currency_label, BrokerError, DRY_RUN, _float_env,
-    get_price_range_since, now_ms, HARD_CAP_MARGIN_USDT, fmt_price, fmt_usdt,
+    get_price_range_since, get_price_snapshot, price_range_from_trades, now_ms, HARD_CAP_MARGIN_USDT, fmt_price, fmt_usdt,
 )
 from common.telegram_notify import send_telegram  # noqa: E402
 from common import paper_ledger  # noqa: E402
+from common.parallel_io import parallel_map  # noqa: E402
 
 # اگه پوزیشنی از نسخه‌ی قبلی (بدون last_checked_ms) باقی مونده باشه، برای
 # اولین چک این‌قدر عقب‌تر می‌ریم تا بازه‌ی معقولی از معاملات اخیر رو ببینیم.
@@ -190,7 +191,7 @@ def _close_lot(state, spot_symbol, pos, lot_key, price, reason, source_label):
     return True
 
 
-def manage_open_position(state: dict, position_key: str, spot_symbol: str):
+def manage_open_position(state: dict, position_key: str, spot_symbol: str, snapshot=None):
     """
     معماری دو-لاتی - دقیقاً مطابق trading_bot_v2.py اصلی: لات a هدفش TP1
     است؛ وقتی TP1 خورد، SL برای لات b (باقی‌مانده) به نقطه‌ی ورود (Breakeven)
@@ -205,11 +206,18 @@ def manage_open_position(state: dict, position_key: str, spot_symbol: str):
     pos = state.get(position_key)
     if not pos:
         return
-    spot_client = get_public_client()
-    mid_price = get_mid_price(spot_client, spot_symbol)
-
-    since_ms = int(pos.get("last_checked_ms") or 0) or (now_ms() - FALLBACK_LOOKBACK_MS)
-    window_low, window_high = get_price_range_since(spot_client, spot_symbol, since_ms, fallback_mid=mid_price)
+    if snapshot is None:
+        spot_client = get_public_client()
+        mid_price = get_mid_price(spot_client, spot_symbol)
+        since_ms = int(pos.get("last_checked_ms") or 0) or (now_ms() - FALLBACK_LOOKBACK_MS)
+        window_low, window_high = get_price_range_since(spot_client, spot_symbol, since_ms, fallback_mid=mid_price)
+    else:
+        # snapshot از پیش و به‌صورت موازی گرفته شده (فقط I/O؛ منطق یکسان)
+        if isinstance(snapshot, Exception):
+            raise snapshot
+        mid_price = snapshot["mid"]
+        since_ms = int(pos.get("last_checked_ms") or 0) or (now_ms() - FALLBACK_LOOKBACK_MS)
+        window_low, window_high = price_range_from_trades(snapshot["trades"], since_ms, fallback_mid=mid_price)
     if window_low is None:
         window_low = window_high = mid_price
     pos["last_checked_ms"] = now_ms()
@@ -408,27 +416,48 @@ def main():
     if skipped_no_binance:
         print(f"ℹ️ {len(skipped_no_binance)} نماد روی بایننس داده‌ی تاریخی ندارن، از این اجرا رد شدن: {skipped_no_binance}")
 
+    # --- فاز ۱: مدیریت پوزیشن‌های باز. درخواست‌های شبکه (قیمت + معاملات) برای هر
+    # نمادِ دارای پوزیشن باز موازی گرفته می‌شن؛ اعمال روی state/لجر ترتیبی می‌مونه. ---
+    open_spots = [syms["spot"] for syms in binance_to_symbols.values()
+                  if f"{syms['spot']}__st" in state or f"{syms['spot']}__smc" in state]
+
+    def _fetch_snapshot(spot_symbol):
+        return get_price_snapshot(get_public_client(), spot_symbol)
+
+    snapshots = parallel_map(_fetch_snapshot, open_spots)
+    print(f"پوزیشن‌های باز: روی {len(open_spots)} نماد | درخواست‌های قیمت موازی انجام شد")
+
+    for binance_symbol, syms in binance_to_symbols.items():
+        spot_symbol = syms["spot"]
+        st_key = f"{spot_symbol}__st"
+        smc_key = f"{spot_symbol}__smc"
+        for key, label in ((st_key, "Supertrend+ADX"), (smc_key, "ICT/SMC v2")):
+            try:
+                manage_open_position(state, key, spot_symbol, snapshot=snapshots.get(spot_symbol))
+            except Exception as e:
+                notify(f"❌ خطا در مدیریت پوزیشن باز {spot_symbol} ({label}): {e}")
+
+    # --- فاز ۲: داده‌ی بایننس (کندل + HTF) فقط برای نمادهایی که هنوز یکی از دو
+    # استراتژی‌شون پوزیشن باز نداره، موازی. ---
+    need_klines = [bs for bs, syms in binance_to_symbols.items()
+                   if f"{syms['spot']}__st" not in state or f"{syms['spot']}__smc" not in state]
+    need_htf = [bs for bs, syms in binance_to_symbols.items() if f"{syms['spot']}__smc" not in state]
+    klines_res = parallel_map(lambda bs: get_klines(bs, TIMEFRAME, KLINES_LIMIT), need_klines)
+    htf_res = parallel_map(get_htf_bias_v2, need_htf)
+
+    # --- فاز ۳: ارزیابی سیگنال و باز کردن پوزیشن (ترتیبی - روی state/موجودی) ---
     for binance_symbol, syms in binance_to_symbols.items():
         spot_symbol = syms["spot"]
         margin_symbol = syms["margin"]
-
-        # --- مدیریت پوزیشن‌های باز موجود (هر استراتژی مستقل) ---
         st_key = f"{spot_symbol}__st"
         smc_key = f"{spot_symbol}__smc"
-        try:
-            manage_open_position(state, st_key, spot_symbol)
-        except Exception as e:
-            notify(f"❌ خطا در مدیریت پوزیشن باز {spot_symbol} (Supertrend+ADX): {e}")
-        try:
-            manage_open_position(state, smc_key, spot_symbol)
-        except Exception as e:
-            notify(f"❌ خطا در مدیریت پوزیشن باز {spot_symbol} (ICT/SMC v2): {e}")
 
-        try:
-            df = get_klines(binance_symbol, TIMEFRAME, KLINES_LIMIT)
-        except Exception as e:
-            print(f"❌ خطا در گرفتن داده‌ی {binance_symbol}: {e}")
-            time.sleep(0.5)
+        if binance_symbol not in klines_res:
+            continue  # هر دو استراتژی پوزیشن باز دارن؛ سیگنال جدیدی لازم نیست
+        df = klines_res[binance_symbol]
+        if isinstance(df, Exception):
+            # فقط توی لاگ اجرا چاپ می‌شه، نه تلگرام (قطعی موقت شبکه)
+            print(f"❌ خطا در گرفتن داده‌ی {binance_symbol}: {df}")
             continue
 
         # --- استراتژی ۱: Supertrend + ADX (بدون معکوس‌سازی) ---
@@ -451,10 +480,11 @@ def main():
 
         # --- استراتژی ۲: ICT/SMC v2 (بدون معکوس‌سازی) ---
         if smc_key not in state:
-            try:
-                htf_bullish, htf_bearish = get_htf_bias_v2(binance_symbol)
-            except Exception:
+            htf = htf_res.get(binance_symbol)
+            if htf is None or isinstance(htf, Exception):
                 htf_bullish, htf_bearish = True, True
+            else:
+                htf_bullish, htf_bearish = htf
             try:
                 res = check_strategy_smc_v2(df, htf_bullish, htf_bearish)
             except Exception as e:
@@ -475,8 +505,6 @@ def main():
                         source_label=SOURCE_SMC, extra_label=f" | امتیاز={score}/7",
                         signal_score=score,
                     )
-
-        time.sleep(0.5)
 
     save_state(state)
 
