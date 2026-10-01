@@ -264,9 +264,31 @@ def get_price_range_since(spot_client: Spot, symbol: str, since_ms: int,
     (قیمت لحظه‌ای Bid/Ask) برگردانده می‌شود - یعنی در بدترین حالت رفتار
     دقیقاً مثل نسخه‌ی قبلی (تک‌نقطه‌ای) می‌شود، نه بدتر.
     """
-    prices = []
     try:
         raw = spot_client.trades(symbol=symbol, limit=trade_limit)
+    except Exception:
+        raw = None
+    return price_range_from_trades(raw, since_ms, fallback_mid)
+
+
+def get_price_snapshot(spot_client: Spot, symbol: str, trade_limit: int = 1000) -> dict:
+    """
+    قیمت لحظه‌ای + آخرین معاملات عمومی را *یک‌بار* برای یک نماد می‌گیرد (برای
+    استفاده‌ی موازی). خطای mid_price پرتاب می‌شود (مثل قبل)؛ خطای trades فقط
+    raw=None می‌شود (مثل قبل، fallback به قیمت لحظه‌ای).
+    """
+    mid = get_mid_price(spot_client, symbol)
+    try:
+        raw = spot_client.trades(symbol=symbol, limit=trade_limit)
+    except Exception:
+        raw = None
+    return {"mid": mid, "trades": raw}
+
+
+def price_range_from_trades(raw, since_ms: int, fallback_mid: float = None):
+    """همان منطق قبلی get_price_range_since، ولی روی خروجی خام trades."""
+    prices = []
+    try:
         items = raw if isinstance(raw, list) else raw.get("trades", raw) if isinstance(raw, dict) else []
         for t in items:
             t_time = t.get("time") or t.get("timestamp") or t.get("T")
